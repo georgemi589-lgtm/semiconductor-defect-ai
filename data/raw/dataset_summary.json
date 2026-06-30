@@ -1,0 +1,31 @@
+{
+  "total_samples": 811457,
+  "total_columns": 7,
+  "defect_classes": {
+    "none": 785938,
+    "Edge-Ring": 9680,
+    "Edge-Loc": 5189,
+    "Center": 4294,
+    "Loc": 3593,
+    "Scratch": 1193,
+    "Random": 866,
+    "Donut": 555,
+    "Near-full": 149
+  },
+  "num_classes": 9,
+  "wafer_map_shape": [
+    45,
+    48
+  ],
+  "missing_values": 0,
+  "imbalance_ratio": 5274.8,
+  "key_findings": [
+    "811,457 total wafer maps loaded",
+    "9 defect classes identified",
+    "Zero missing values \u2014 clean dataset",
+    "Extreme class imbalance: 5275x ratio",
+    "96.9% samples are non-defective (none class)",
+    "Near-full defect is rarest: only 149 samples",
+    "Each wafer map is 45x48 pixels with values 0,1,2"
+  ]
+}
