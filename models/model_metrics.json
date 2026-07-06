@@ -1,0 +1,6 @@
+{
+  "top1_accuracy": 0.9205,
+  "top5_accuracy": 0.9997,
+  "evaluated_on": "held-out test set (data/splits/test, 9370 images)",
+  "train_images_per_class_note": "full augmented dataset (~62,000 images)"
+}
