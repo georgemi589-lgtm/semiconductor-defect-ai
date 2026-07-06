@@ -9,7 +9,6 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import cv2
 from PIL import Image
 import io
 import time
