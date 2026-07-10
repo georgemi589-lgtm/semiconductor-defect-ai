@@ -100,8 +100,39 @@ streamlit run dashboard/app.py
 - [x] Week 3 — YOLOv8 Model Training
 - [x] Week 4 — FastAPI Backend
 - [x] Week 5 — Dashboard, Database & Reports
+- [x] Week 5.5 — PCB Defect Detection (2nd inspection mode)
 - [ ] Week 6 — Docker & Deployment
+`
+## 🔌 PCB Defect Detection (New)
 
+In addition to wafer-level defect classification, DefectAI now includes
+a second inspection mode for **PCB (printed circuit board) defect detection**
+using object detection — locating and classifying multiple defects per image,
+not just a single label per image.
+
+- **Model:** YOLOv8n (object detection), trained on CPU
+- **Dataset:** 693 annotated PCB images, 6 defect classes
+- **Classes:** `missing_hole`, `mouse_bite`, `open_circuit`, `short`, `spur`, `spurious_copper`
+- **Results:** 89.4% mAP50, 46.7% mAP50-95 on held-out validation data
+- **Inference speed:** ~0.1s per board
+- Fully integrated into the same dashboard — single inspection, batch
+  processing, database logging, and PDF reports, mirroring the wafer
+  classifier's workflow.
+
+
+## 📅 Progress Log
+
+| Week | Date | Milestone |
+|------|------|-----------|
+| 1 | [fill in] | Explored WM-811K dataset (811K wafer maps), analyzed class imbalance |
+| 2 | [fill in] | Built preprocessing + augmentation pipeline, fixed 5,274:1 class imbalance |
+| 3 | [fill in] | Trained YOLOv8n-cls wafer classifier — 92.05% test accuracy |
+| 4 | [fill in] | Built FastAPI backend serving real-time predictions |
+| 5 | [fill in] | Built Streamlit dashboard, SQLite logging, PDF report generation; deployed live to Streamlit Community Cloud |
+| 5.5 | 2026-07-10 | Added PCB defect detection (YOLOv8n object detection) — 693 images, 6 defect classes, 89.4% mAP50 — fully integrated as a second inspection mode |
+| 6 | [upcoming] | Docker containerization for production deployment |
+
+*(Fill in the actual dates for Weeks 1-5 from your own notes/commit history — even approximate dates are fine.)*
 ## 📜 License
 
 This project uses the WM-811K dataset for research/educational purposes.
