@@ -1,0 +1,35 @@
+# =============================================================
+# keep-alive.yml
+#
+# WHERE THIS FILE GOES (this part matters — GitHub only recognizes
+# workflows in this exact folder):
+#
+#   your-project-root/
+#     └── .github/
+#           └── workflows/
+#                 └── keep-alive.yml   <-- this file, exactly here
+#
+# You'll likely need to create the ".github" and "workflows" folders
+# yourself — they don't exist in your project yet. Instructions for
+# how to do that are in the message below this file.
+# =============================================================
+
+name: Keep Streamlit App Awake
+
+# Runs automatically every 10 minutes, all day, every day.
+# You can also trigger it manually from the GitHub Actions tab
+# using "workflow_dispatch" below, e.g. to test it immediately
+# without waiting for the schedule.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping the live DefectAI app
+        run: |
+          curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
+            https://semiconductor-defect-ai-hg9c2wfjak62sxzemakh8t.streamlit.app
