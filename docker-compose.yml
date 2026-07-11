@@ -1,0 +1,37 @@
+# =============================================================
+# docker-compose.yml
+# Save this file at the ROOT of your project, same level as Dockerfile
+#
+# This lets you start the whole app with one command:
+#     docker-compose up
+# instead of typing a long "docker run" command with all the
+# port/volume flags every time.
+# =============================================================
+
+version: "3.8"
+
+services:
+  defectai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: defectai-dashboard
+    ports:
+      - "8501:8501"
+    volumes:
+      # These three folders live OUTSIDE the container, on your
+      # actual Windows machine. This means your inspection
+      # database, generated PDF reports, and temp files SURVIVE
+      # even if you stop/delete/rebuild the container. Without
+      # this, every fresh container would start with an empty
+      # database — losing all your inspection history.
+      - ./database:/app/database
+      - ./reports:/app/reports
+      - ./temp:/app/temp
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s

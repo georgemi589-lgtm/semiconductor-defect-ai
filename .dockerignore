@@ -1,0 +1,44 @@
+# =============================================================
+# .dockerignore
+# Save this file at the ROOT of your project, same level as Dockerfile
+#
+# This tells Docker which files to SKIP when building the image.
+# Without this, Docker would try to copy your entire raw dataset
+# (hundreds of thousands of wafer images, PCB training images) into
+# the image, making it enormous and the build extremely slow.
+# =============================================================
+
+# Python environment (Docker installs its own packages fresh)
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Git
+.git/
+.gitignore
+
+# Large raw datasets — NOT needed to run the dashboard, only
+# needed for training. Your dashboard only needs the trained
+# model weight files (models/, runs/), not the raw images.
+data/
+
+# Notebooks, tests, docs — not needed to run the app
+notebooks/
+tests/
+*.ipynb
+
+# Local runtime data that should NOT be baked into the image —
+# these will be created fresh inside the container, or better,
+# mounted as volumes (see docker-compose.yml)
+logs/
+temp/
+reports/*.pdf
+
+# OS/editor junk
+.DS_Store
+.vscode/
+*.log
+
+# Large zip/sample files not needed at runtime
+splits_sample.zip
