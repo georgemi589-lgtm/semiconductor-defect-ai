@@ -1,3 +1,6 @@
+**Status: actively being re-validated.** A data-leakage issue was found and is being corrected in the evaluation pipeline — see the Results section for full details. This project is shared to demonstrate the audit and correction process as much as the model itself. 
+[![Evaluation](https://img.shields.io/badge/test%20accuracy-under%20re--evaluation-yellow)](https://img.shields.io/badge/test%20accuracy-under%20re--evaluation-yellow)
+
 # 🔬 DefectAI — Enterprise Semiconductor Defect Detection
 
 An end-to-end AI system for detecting and classifying semiconductor wafer defects, built from raw data to a live, deployed product.
@@ -6,7 +9,6 @@ An end-to-end AI system for detecting and classifying semiconductor wafer defect
 
 ![Status](https://img.shields.io/badge/status-live-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.10-blue)
-![Model Accuracy](https://img.shields.io/badge/test%20accuracy-92%25-success)
 
 ---
 
@@ -30,9 +32,14 @@ Trained on **WM-811K**, a real-world dataset of 811,457 wafer maps (originally r
 
 ## 🎯 Results
 
-- **92.05% Top-1 accuracy** on a completely held-out test set (9,370 images, never seen during training or validation)
-- **99.97% Top-5 accuracy**
-- Trained on a class-balanced dataset (fixed an original **5,274:1 class imbalance** between the majority and minority defect classes)
+**⚠️ Data integrity note (added after self-audit):** The originally reported 92.05% top-1 / 99.97% top-5 accuracy was found to be unreliable. An audit of the data pipeline revealed that class-balancing augmentation (rotation, flipping, noise) was applied to each defect class *before* the train/val/test split, rather than after. Because the split was then performed by shuffling all images (originals and augmented copies together) within each class folder, augmented siblings of the same source wafer could land in both the training set and the test set — confirmed via audit: **45.11% of test-set wafers had at least one augmented sibling present in the training set.**
+
+This means the test set was not a clean, independent holdout, and the reported accuracy likely overstates real-world generalization performance. The pipeline is being corrected — class balancing will be applied only to the training split, after a leakage-free split on the original (pre-augmentation) wafers — and the model will be retrained and re-evaluated. This section will be updated with the corrected, verified number once that is complete.
+
+**Original (unverified) result, kept for transparency:**
+- 92.05% Top-1 accuracy — **not yet verified; test set confirmed contaminated, see note above**
+- 99.97% Top-5 accuracy — same caveat applies
+- Trained on a class-balanced dataset (fixed an original 5,274:1 class imbalance between the majority and minority defect classes)
 
 ## 🏗️ System Architecture
 
