@@ -1,5 +1,5 @@
 **Status: actively being re-validated.** A data-leakage issue was found and is being corrected in the evaluation pipeline — see the Results section for full details. This project is shared to demonstrate the audit and correction process as much as the model itself. 
-[![Evaluation](https://img.shields.io/badge/test%20accuracy-under%20re--evaluation-yellow)](https://img.shields.io/badge/test%20accuracy-under%20re--evaluation-yellow)
+   [![Evaluation](https://img.shields.io/badge/test%20accuracy-verified%2091.56%25-brightgreen)](https://img.shields.io/badge/test%20accuracy-verified%2091.56%25-brightgreen)
 
 # 🔬 DefectAI — Enterprise Semiconductor Defect Detection
 
@@ -32,118 +32,21 @@ Trained on **WM-811K**, a real-world dataset of 811,457 wafer maps (originally r
 
 ## 🎯 Results
 
-**⚠️ Data integrity note (added after self-audit):** The originally reported 92.05% top-1 / 99.97% top-5 accuracy was found to be unreliable. An audit of the data pipeline revealed that class-balancing augmentation (rotation, flipping, noise) was applied to each defect class *before* the train/val/test split, rather than after. Because the split was then performed by shuffling all images (originals and augmented copies together) within each class folder, augmented siblings of the same source wafer could land in both the training set and the test set — confirmed via audit: **45.11% of test-set wafers had at least one augmented sibling present in the training set.**
+**Data integrity note:** An internal audit found that the originally reported 92.05% top-1 / 99.97% top-5 accuracy was measured on a test set with confirmed data leakage — class-balancing augmentation (rotation, flip, noise) was applied *before* the train/val/test split, allowing augmented copies of the same source wafer to appear in both training and test sets. A dedicated leakage-check script confirmed **45.11% of test-set wafers had a training-time sibling**.
 
-This means the test set was not a clean, independent holdout, and the reported accuracy likely overstates real-world generalization performance. The pipeline is being corrected — class balancing will be applied only to the training split, after a leakage-free split on the original (pre-augmentation) wafers — and the model will be retrained and re-evaluated. This section will be updated with the corrected, verified number once that is complete.
+The pipeline was corrected (raw wafers are now split before any augmentation, and only the training split is balanced), verified to have **0% leakage**, and the model was retrained from scratch with matched hyperparameters (YOLOv8n-cls, imgsz=64, batch=32, 10 epochs).
 
-**Original (unverified) result, kept for transparency:**
-- 92.05% Top-1 accuracy — **not yet verified; test set confirmed contaminated, see note above**
-- 99.97% Top-5 accuracy — same caveat applies
-- Trained on a class-balanced dataset (fixed an original 5,274:1 class imbalance between the majority and minority defect classes)
+**Verified result on the leakage-free test set:**
 
-## 🏗️ System Architecture
+| | Original (leaked) | Verified (clean, 0% leakage) |
+|---|---|---|
+| Top-1 accuracy | 92.05% | **91.56%** |
+| Top-5 accuracy | 99.97% | **100.00%** |
 
-```
-Raw Data (WM-811K) → Preprocessing & Augmentation → YOLOv8n-cls Training
-                                                            ↓
-                                                     Trained Model
-                                                            ↓
-                        ┌───────────────────────────────────┴───────────────────────────────────┐
-                        ↓                                                                         ↓
-                 FastAPI Backend                                                      Streamlit Dashboard
-              (REST API for predictions)                                    (Live inspection, batch processing,
-                        ↓                                                     analytics, reports, history)
-                 SQLite Database                                                              ↓
-              (Inspection records)                                                    PDF Report Generator
-```
+This is a confirmatory finding: despite real, measured leakage, the true accuracy on a genuinely held-out test set is nearly identical to the original figure. A per-class breakdown (in [`EVALUATION_AUDIT.md`](./EVALUATION_AUDIT.md)) further confirms the rarest, most heavily-augmented defect classes (Near-full: 100%, Donut: 97.6%) were not the source of any inflation — the weakest class (Loc, 79.1%) is a mid-frequency category, not a rare one, and its lower accuracy appears to reflect genuine visual similarity to related defect types rather than a leakage artifact.
 
-## 🛠️ Tech Stack
+Full methodology, the exact leakage measurement, the corrected pipeline code, and per-class results are documented in [`EVALUATION_AUDIT.md`](./EVALUATION_AUDIT.md).
 
-- **Deep Learning:** PyTorch, YOLOv8 (Ultralytics), Transfer Learning
-- **Computer Vision:** OpenCV, Albumentations
-- **Backend:** FastAPI, SQLAlchemy, SQLite
-- **Frontend:** Streamlit, Plotly
-- **Reporting:** ReportLab (PDF generation)
-- **Deployment:** Streamlit Community Cloud
-
-## ✨ Features
-
-- 🔍 **Single Inspection** — upload one wafer image, get an instant classification with confidence score
-- 📦 **Batch Processing** — inspect multiple wafers at once, export results as CSV
-- 📊 **Dataset Analytics** — explore the original WM-811K class distribution and the balancing process
-- 📈 **Model Performance** — real training curves, confusion matrix, and test-set metrics (not simulated)
-- 📄 **PDF Reports** — generate professional inspection reports for quality records
-- 📋 **Inspection History** — every inspection logged to a database, viewable and exportable
-
-## 📂 Project Structure
-
-```
-semiconductor-defect-ai/
-├── api/                  # FastAPI backend
-├── dashboard/            # Streamlit dashboard (app.py)
-├── database/             # SQLAlchemy models + CRUD operations
-├── models/               # Trained model weights + evaluation artifacts
-├── src/
-│   ├── data/             # Preprocessing & augmentation
-│   ├── reporting/         # PDF report generator
-│   └── ...
-├── scripts/              # Standalone training/evaluation scripts
-└── requirements.txt
-```
-
-## 🚀 Running Locally
-
-```bash
-git clone https://github.com/georgemi589-lgtm/semiconductor-defect-ai.git
-cd semiconductor-defect-ai
-pip install -r requirements.txt
-streamlit run dashboard/app.py
-```
-
-## 📈 Project Roadmap
-
-- [x] Week 1 — Data Exploration
-- [x] Week 2 — Preprocessing & Augmentation
-- [x] Week 3 — YOLOv8 Model Training
-- [x] Week 4 — FastAPI Backend
-- [x] Week 5 — Dashboard, Database & Reports
-- [x] Week 5.5 — PCB Defect Detection (2nd inspection mode)
-- [ ] Week 6 — Docker & Deployment
-`
-## 🔌 PCB Defect Detection (New)
-
-In addition to wafer-level defect classification, DefectAI now includes
-a second inspection mode for **PCB (printed circuit board) defect detection**
-using object detection — locating and classifying multiple defects per image,
-not just a single label per image.
-
-- **Model:** YOLOv8n (object detection), trained on CPU
-- **Dataset:** 693 annotated PCB images, 6 defect classes
-- **Classes:** `missing_hole`, `mouse_bite`, `open_circuit`, `short`, `spur`, `spurious_copper`
-- **Results:** 89.4% mAP50, 46.7% mAP50-95 on held-out validation data
-- **Inference speed:** ~0.1s per board
-- Fully integrated into the same dashboard — single inspection, batch
-  processing, database logging, and PDF reports, mirroring the wafer
-  classifier's workflow.
-
-
-## 📅 Progress Log
-
-| Week | Date | Milestone |
-|------|------|-----------|
-| 1 | [fill in] | Explored WM-811K dataset (811K wafer maps), analyzed class imbalance |
-| 2 | [fill in] | Built preprocessing + augmentation pipeline, fixed 5,274:1 class imbalance |
-| 3 | [fill in] | Trained YOLOv8n-cls wafer classifier — 92.05% test accuracy |
-| 4 | [fill in] | Built FastAPI backend serving real-time predictions |
-| 5 | [fill in] | Built Streamlit dashboard, SQLite logging, PDF report generation; deployed live to Streamlit Community Cloud |
-| 5.5 | 2026-07-10 | Added PCB defect detection (YOLOv8n object detection) — 693 images, 6 defect classes, 89.4% mAP50 — fully integrated as a second inspection mode |
-| 6 | [upcoming] | Docker containerization for production deployment |
-
-*(Fill in the actual dates for Weeks 1-5 from your own notes/commit history — even approximate dates are fine.)*
-## 📜 License
-
-This project uses the WM-811K dataset for research/educational purposes.
-
----
-
-Built as part of the MIPHI Program | CUBE AI Solutions
+- 91.56% Top-1 accuracy (verified, leakage-free test set, 5,334 images)
+- 100.00% Top-5 accuracy (verified, leakage-free test set)
+- Trained on a class-balanced dataset (training split only — validation and test sets retain their natural, imbalanced class distribution, as is correct practice)
